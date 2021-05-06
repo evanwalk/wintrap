@@ -6,13 +6,11 @@ from Timesheet import Timesheet
 
 SHEETS:list[Timesheet] = []
 
-CURRENT_SHEET:Timesheet = None
-
 def loadSheets():
     for file in listdir("store"):
-        if file.endswith(".TIMESHEET"):
+        if file.endswith(".timesheet"):
             try:
-                timesheet = pickle.load(open(file, "rb"))
+                timesheet = pickle.load(open(f"store/{file}", "rb"))
                 timesheet.entries
             except:
                 #file format error
@@ -22,26 +20,40 @@ def loadSheets():
 
 def switch(timesheet_name):
     name = " ".join(timesheet_name)
-    if CURRENT_SHEET is not None:
-        CURRENT_SHEET.checkout()
-        sheet = Timesheet(name)
-        for cached in SHEETS:
-            if cached.name == name:
-                sheet = cached
-                break
-        CURRENT_SHEET = sheet
-    else:
-        sheet = Timesheet(name)
-        CURRENT_SHEET = sheet
+    for sheet in SHEETS:
+        sheet.checkout()
     
-    CURRENT_SHEET.switchto()
+    sheet = Timesheet(name)
+    for cached in SHEETS:
+        if cached.name == name:
+            sheet = cached
+    
+    sheet.switchto()
     print("Switched to", name)
+
 
 def checkin(message):
     message = " ".join(message)
+    current_sheet = None
+    for sheet in SHEETS:
+        if sheet.current and current_sheet is None:
+            current_sheet = sheet
+        elif sheet.current:
+            print("Current sheet sync error, not handeled yet")
+
+    if current_sheet is None:
+        print("No sheet selected, switch to a sheet")
+        BOOM()
+    else:
+        current_sheet.checkin(message)
+        print(f"Checked into \"{current_sheet.name}\", updated with \"{message}\"")
 
 
-COMMANDS = {"switch":switch}
+    message = " ".join(message)
+
+
+COMMANDS = {"switch":   switch,
+            "in":       checkin}
 
 def parse_arg(arg, *args):
     count = 0
@@ -54,7 +66,7 @@ def parse_arg(arg, *args):
             matches.append(key)
     if count == 1:
         #command found
-        v(args)
+        v(args[0])
     else:
         #no command found
         if count != 0:
@@ -76,6 +88,8 @@ if __name__ == '__main__':
     try:
         parse_arg(args[0], args[1:])
     except IndexError:
+        import traceback
+        print(traceback.format_exc())
         print("Missing argument")
 
 
