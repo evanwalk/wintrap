@@ -1,12 +1,12 @@
 import pickle
 from sys import argv
-from sys import exit as BOOM
 from os import listdir
-from Timesheet import Timesheet
+from Commands import switch, checkout, checkin, clear_all, SHEETS
 
-SHEETS:list[Timesheet] = []
 
 def loadSheets():
+    global SHEETS
+    SHEETS = []
     for file in listdir("store"):
         if file.endswith(".timesheet"):
             try:
@@ -18,42 +18,11 @@ def loadSheets():
             else:
                 SHEETS.append(timesheet)
 
-def switch(timesheet_name):
-    name = " ".join(timesheet_name)
-    for sheet in SHEETS:
-        sheet.checkout()
-    
-    sheet = Timesheet(name)
-    for cached in SHEETS:
-        if cached.name == name:
-            sheet = cached
-    
-    sheet.switchto()
-    print("Switched to", name)
-
-
-def checkin(message):
-    message = " ".join(message)
-    current_sheet = None
-    for sheet in SHEETS:
-        if sheet.current and current_sheet is None:
-            current_sheet = sheet
-        elif sheet.current:
-            print("Current sheet sync error, not handeled yet")
-
-    if current_sheet is None:
-        print("No sheet selected, switch to a sheet")
-        BOOM()
-    else:
-        current_sheet.checkin(message)
-        print(f"Checked into \"{current_sheet.name}\", updated with \"{message}\"")
-
-
-    message = " ".join(message)
-
 
 COMMANDS = {"switch":   switch,
-            "in":       checkin}
+            "in":       checkin,
+            "clear":    clear_all,
+            "out":      checkout}
 
 def parse_arg(arg, *args):
     count = 0
@@ -78,7 +47,7 @@ def parse_arg(arg, *args):
             print()
         else:
             print('No command matches arguments given')
-        BOOM()
+
 
 
 if __name__ == '__main__':
@@ -91,7 +60,14 @@ if __name__ == '__main__':
         import traceback
         print(traceback.format_exc())
         print("Missing argument")
+    
 
+    #DEBUG
+    loadSheets()
+    print("{0:15}| {1:15}| {2:15}| {3}".format("Sheet Name", "Current", "Num Entries", "Last Message"))
+    for e in SHEETS:
+        print(f"{e.name:15}| {'True' if e.current else 'False':15}| {len(e.entries):15}| {e.entries[-1].message if e.entries else 0}")
+    print(e)
 
 
 
