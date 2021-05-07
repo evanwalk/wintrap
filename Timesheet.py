@@ -6,26 +6,37 @@ from hashlib import sha1
 class Timeframe():
     def __init__(self, start):
         self.start = start
-        self.end = None
+        self.__end = None
     
     @property
     def duration(self):
-        if self.end is None:
+        if self.__end is None:
             return datetime.now()-self.start
         else:
-            return self.end-self.start
+            return self.__end-self.start
+        
+    @property
+    def end(self):
+        if self.__end is None:
+            return datetime.now()
+        else:
+            return self.__end
+    
+    @end.setter
+    def end(self, value):
+        self.__end = value
         
 class Entry():
     def __init__(self, message):
         self.message = message
         self.timeframe = Timeframe(start=datetime.now())
         self.open = True
-        self.delta = self.timeframe.duration
+        self.duration = self.timeframe.duration
     
     def end(self):
         self.timeframe.end = datetime.now()
         self.open = False
-        self.delta = self.timeframe.end - self.timeframe.start
+        self.duration = self.timeframe.end - self.timeframe.start
     
 
 class Timesheet():
@@ -44,14 +55,14 @@ class Timesheet():
         last = None
         for entry in self.entries:
             #       day     start   end     duration    notes
-            line = "\t{0:15} {1:15}-{2:15} {3:15} {4:15}\n"
+            line = "\t{0: <20} {1: <10} {2: <10} {3: <15} {4: <15}\n"
             if last is None or entry.timeframe.start.day != last.timeframe.start.day:
-                line.format(entry.timeframe.start.strftime("%a %b %m, %Y"), entry.timeframe.start.strftime("%H:%M:%S"),
-                            entry.end.strftime("%H:%M:%S"), (entry.duration.strftime("%H:%M:%S")),
+                line = line.format(entry.timeframe.start.strftime("%a %b %m, %Y"), entry.timeframe.start.strftime("%H:%M:%S"),
+                            entry.timeframe.end.strftime("%H:%M:%S"), str(entry.duration),
                             entry.message)
             else:
-                line.format("", entry.timeframe.start.strftime("%H:%M:%S"),
-                            entry.end.strftime("%H:%M:%S"), (entry.duration.strftime("%H:%M:%S")),
+                line = line.format("", entry.timeframe.start.strftime("%H:%M:%S"),
+                            entry.timeframe.end.strftime("%H:%M:%S"), str(entry.duration),
                             entry.message)
             last = entry
             ret += line

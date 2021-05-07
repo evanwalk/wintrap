@@ -1,12 +1,11 @@
 import pickle
 from sys import argv
 from os import listdir
-from Commands import switch, checkout, checkin, clear_all, SHEETS
+from Commands import Commands
 
 
 def loadSheets():
-    global SHEETS
-    SHEETS = []
+    sheets = []
     for file in listdir("store"):
         if file.endswith(".timesheet"):
             try:
@@ -16,19 +15,21 @@ def loadSheets():
                 #file format error
                 pass
             else:
-                SHEETS.append(timesheet)
+                sheets.append(timesheet)
+    return sheets
 
+cmd = Commands()
 
-COMMANDS = {"switch":   switch,
-            "in":       checkin,
-            "clear":    clear_all,
-            "out":      checkout}
+COMMANDS = {"switch":   cmd.switch,
+            "in":       cmd.checkin,
+            "clear":    cmd.clear_all,
+            "out":      cmd.checkout}
 
 def parse_arg(arg, *args):
     count = 0
     v = None
     matches = []
-    for key, val in COMMANDS.items():
+    for key, val in cmd.command_map.items():
         if key.lower().startswith(arg.lower()):
             count += 1
             v = val
@@ -51,7 +52,8 @@ def parse_arg(arg, *args):
 
 
 if __name__ == '__main__':
-    loadSheets()
+    
+    cmd.SHEETS = loadSheets()
     args = [x.strip() for x in argv[1:]]
     
     try:
@@ -63,11 +65,10 @@ if __name__ == '__main__':
     
 
     #DEBUG
-    loadSheets()
     print("{0:15}| {1:15}| {2:15}| {3}".format("Sheet Name", "Current", "Num Entries", "Last Message"))
-    for e in SHEETS:
-        print(f"{e.name:15}| {'True' if e.current else 'False':15}| {len(e.entries):15}| {e.entries[-1].message if e.entries else 0}")
-    print(e)
+    for e in cmd.SHEETS:
+        print(e)
+        print("\n")
 
 
 
