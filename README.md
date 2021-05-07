@@ -1,1 +1,1 @@
-wintrap
+CLI Time tracker
