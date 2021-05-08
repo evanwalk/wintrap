@@ -7,6 +7,9 @@ class Entry():
         self.start = datetime.now()
         self.__end = None
 
+    def open(self):
+        return True if self.__end is None else False
+
     @property
     def end(self):
         if self.__end is None:
@@ -14,5 +17,9 @@ class Entry():
         else:
             return self.__end
     
+    @property
+    def delta(self):
+        return self.end - self.start
+
     def close(self):
         self.__end = datetime.now()
